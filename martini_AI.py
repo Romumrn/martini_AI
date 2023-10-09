@@ -45,10 +45,8 @@ def create_folder_and_download_files(path='.'):
         #wget.download("http://data.bioembeddings.com/public/embeddings/feature_models/t5/secstruct_checkpoint.pt", "protT5/sec_struct_checkpoint/secstruct_checkpoint.pt")
 
 
-# device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+# 
 # print("Using {}".format(device))
-
-# Convolutional neural network (two convolutional layers) to predict secondary structure
 
 
 class ConvNet(torch.nn.Module):
@@ -109,13 +107,14 @@ def load_sec_struct_model(checkpoint_dir):
 
 
 def get_T5_model():
+    device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+    print("Device used for the model : {}".format(device))
     model = T5EncoderModel.from_pretrained(
         "Rostlab/prot_t5_xl_half_uniref50-enc")
     model = model.to(device)  # move model to GPU
     model = model.eval()  # set model to evaluation model
     tokenizer = T5Tokenizer.from_pretrained(
         'Rostlab/prot_t5_xl_half_uniref50-enc', do_lower_case=False)
-
     return (model, tokenizer)
 
 

@@ -9,4 +9,5 @@ tqdm
 transformers
 triton
 typing_extensions
+wget
 tzdata
