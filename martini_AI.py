@@ -10,7 +10,8 @@ import wget
 from urllib.request import Request, urlopen
 torch.cuda.empty_cache()
 
-
+device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+print("Device used for the model : {}".format(device))
 
 def create_folder_and_download_files(path='.'):
     """
@@ -107,8 +108,6 @@ def load_sec_struct_model(checkpoint_dir):
 
 
 def get_T5_model():
-    device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-    print("Device used for the model : {}".format(device))
     model = T5EncoderModel.from_pretrained(
         "Rostlab/prot_t5_xl_half_uniref50-enc")
     model = model.to(device)  # move model to GPU
