@@ -1,9 +1,10 @@
-import torch
-import h5py
-import numpy as np
-import pandas as pd
-import time
-import sys
-import os
-import wget
-import Request, urlopen
+torch
+h5py
+numpy
+pandas
+time
+sys
+os
+wget
+Request
+urlopen

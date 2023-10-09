@@ -1,3 +1,5 @@
+
+
 def create_folder_and_download_files(path='.'):
     """
     This function will prepare the execution of the ML model.
@@ -31,8 +33,8 @@ def create_folder_and_download_files(path='.'):
         #wget.download("http://data.bioembeddings.com/public/embeddings/feature_models/t5/secstruct_checkpoint.pt", "protT5/sec_struct_checkpoint/secstruct_checkpoint.pt")
 
 
-device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-print("Using {}".format(device))
+# device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+# print("Using {}".format(device))
 
 # Convolutional neural network (two convolutional layers) to predict secondary structure
 
@@ -191,68 +193,3 @@ def get_prediction(loaded_model, sequence, pdb_id='seq_0', max_residues=4000, ma
     result = np.column_stack((list(sequence), probabilities))
     return result
 
-
-# whether to retrieve embeddings for each residue in a protein
-# --> Lx1024 matrix per protein with L being the protein's length
-# as a rule of thumb: 1k proteins require around 1GB RAM/disk
-per_residue = False
-# where to store the embeddings
-per_residue_path = "./protT5/output/per_residue_embeddings.h5"
-
-# whether to retrieve per-protein embeddings
-# --> only one 1024-d vector per protein, irrespective of its length
-per_protein = True
-# where to store the embeddings
-per_protein_path = "./protT5/output/per_protein_embeddings.h5"
-
-# whether to retrieve secondary structure predictions
-# This can be replaced by your method after being trained on ProtT5 embeddings
-sec_struct = True
-sec_struct_path = "./protT5/output/ss3_preds.fasta"  # file for storing predictions
-
-# make sure that either per-residue or per-protein embeddings are stored
-assert per_protein is True or per_residue is True or sec_struct is True, print(
-    "Minimally, you need to active per_residue, per_protein or sec_struct. (or any combination)")
-
-# Load the encoder part of ProtT5-XL-U50 in half-precision (recommended)
-model, tokenizer = get_T5_model()
-
-# Load example fasta.
-if sys.argv[1]:
-    seqs = read_fasta(sys.argv[1])
-    print("fasta loaded")
-else:
-    print("Please provide a fasta file")
-    exit
-
-# Compute embeddings and/or secondary structure predictions
-print("get prediction")
-results = get_embeddings(model, tokenizer, seqs,
-                         per_residue, per_protein, sec_struct, True)
-
-# List of protein names extracted from the 'seqs' dictionary
-list_prot_name = list(seqs.keys())
-
-# Mapping of DSSP8 values to secondary structure classes
-# 310 helix (G), α-helix (H), π-helix (I), β-strand (E),
-# bridge (B), turn (T), bend (S), and others (C).
-dssp8 = ["G", "H", "I", "E", "B", "T", "S", "C"]
-
-results_array = {}
-# Loop through each protein name
-for i in list_prot_name:
-    print(f"Process {i}")
-    sequence = seqs[i]
-    probabilities = results["ss8_tensor"][i].cpu(
-    ).detach().numpy()  # Convert tensor to NumPy array
-    # Combine sequence and probabilities
-    result = np.column_stack((list(sequence), probabilities))
-    results_array[i] = result
-
-    # convert array into dataframe
-    DF = pd.DataFrame(results_array[i])
-    name = i.replace(" ", "_")
-    # save the dataframe as a csv file
-    DF.to_csv(f"data_{name}.csv")
-
-print(results_array)
