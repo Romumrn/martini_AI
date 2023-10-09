@@ -11,3 +11,4 @@ triton
 typing_extensions
 wget
 tzdata
+sentencepiece
