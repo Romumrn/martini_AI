@@ -159,8 +159,7 @@ def get_prediction(loaded_model, sequence, pdb_id='seq_0', max_residues=4000, ma
     print(b - a)
     sec_struct_model = load_sec_struct_model("./protT5/sec_struct_checkpoint/secstruct_checkpoint.pt")
     print(time.time()-b)
-    results = {"residue_embs": [], "protein_embs": [], "sec_structs": [], "ss8_tensor": []
-               }
+    results = {"residue_embs": [], "sec_structs": [], "ss8_tensor": []}
     # sort sequences according to length (reduces unnecessary padding --> speeds up embedding)
     start = time.time()
     batch = list()
