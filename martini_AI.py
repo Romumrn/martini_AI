@@ -153,12 +153,8 @@ def get_prediction(loaded_model, sequence, pdb_id='seq_0', max_residues=4000, ma
     """
     Blabla
     """
-    a = time.time()
     model, tokenizer = loaded_model
-    b = time.time()
-    print(b - a)
     sec_struct_model = load_sec_struct_model("./protT5/sec_struct_checkpoint/secstruct_checkpoint.pt")
-    print(time.time()-b)
     results = {"residue_embs": [], "sec_structs": [], "ss8_tensor": []}
     # sort sequences according to length (reduces unnecessary padding --> speeds up embedding)
     start = time.time()
@@ -176,7 +172,7 @@ def get_prediction(loaded_model, sequence, pdb_id='seq_0', max_residues=4000, ma
         [seq], add_special_tokens=True, padding="longest")
     input_ids = torch.tensor(token_encoding['input_ids']).to(device)
     attention_mask = torch.tensor(token_encoding['attention_mask']).to(device)
-    print(3)
+
     try:
         with torch.no_grad():
             # returns: ( batch-size x max_seq_len_in_minibatch x embedding_dim )
@@ -186,19 +182,20 @@ def get_prediction(loaded_model, sequence, pdb_id='seq_0', max_residues=4000, ma
 
     d3_Yhat, d8_Yhat, diso_Yhat = sec_struct_model(
         embedding_repr.last_hidden_state)
-    print(4)
     # slice off padding --> batch-size x seq_len x embedding_dim
     emb = embedding_repr.last_hidden_state[0, :seq_len]
-    results["sec_structs"] = torch.max(d3_Yhat[0, :seq_len], dim=1)[
-        1].detach().cpu().numpy().squeeze()
+    results["sec_structs"] = torch.max(d3_Yhat[0, :seq_len], dim=1)[1].detach().cpu().numpy().squeeze()
     results["residue_embs"] = emb.detach().cpu().numpy().squeeze()
     probs = torch.nn.Softmax(dim=1)
     results["ss8_tensor"] = probs(d8_Yhat[0, :seq_len])
 
     passed_time = time.time()-start
     print('### Done in {} sec'.format(str(passed_time)))
-    # Convert tensor to NumPy array
-    probabilities = results["ss8_tensor"].cpu().detach().numpy()
+    # Convert 'probabilities' to a float numpy array
+    probabilities = np.array(results["ss8_tensor"].cpu().detach().numpy(), dtype=np.float32)
+
+    # Stack 'sequence' and 'probabilities' as columns
     result = np.column_stack((list(sequence), probabilities))
+
     return result
 
