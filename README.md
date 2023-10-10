@@ -1,6 +1,20 @@
 # Project: Martini Dyhedrals powered by AI
 
-Based on [ProtTrans](https://github.com/agemagician/ProtTrans), we convert the output of the neural nextfwork to gest secondary structure probabilies and find the appropriate dyherals for Martini3 
+Based on [ProtTrans](https://github.com/agemagician/ProtTrans), to convert the output of a neural network into secondary structure probabilities and identify suitable dihedrals for Martini3.
+
+## Requirements
+
+- Powerful GPU
+- Sufficient Memory (Specific requirements to be defined)
+
+# Command Line Instructions
+
+1. Create a virtual environment (optional but recommended):
+
+```
+python -m venv my_virtual_env
+source my_virtual_env/bin/activate
+```
 
 ## Requirement 
 
@@ -11,10 +25,14 @@ Based on [ProtTrans](https://github.com/agemagician/ProtTrans), we convert the o
 
 # Command line
 ```
-pyhton -m venv my_virtual_env
+python -m venv my_virtual_env
 source my_virtual_env/bin/activate
 pip install -r requirements.txt
 
-python run_ProtT5.py example/rcsb_pdb_1AO6.fasta
+python run_ProtT5.py SQUENCE
 ```
 
+# or run it google collab 
+
+....
+...
