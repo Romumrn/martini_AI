@@ -5,7 +5,7 @@ Based on [ProtTrans](https://github.com/agemagician/ProtTrans), to convert the o
 ## Requirements
 
 - Powerful GPU
-- Sufficient Memory (Specific requirements to be defined)
+- Sufficient Memory 
 
 # Command Line Instructions
 
@@ -32,7 +32,7 @@ pip install -r requirements.txt
 python run_ProtT5.py SQUENCE
 ```
 
-# or run it google collab 
+# Or run it google collab 
 
 ....
 ...

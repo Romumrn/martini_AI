@@ -128,7 +128,7 @@ def read_fasta(fasta_path, split_char="!", id_field=0):
     print("Read {} sequences.".format(len(seqs)))
     return seqs
 
-def get_prediction(loaded_model, sequence, pdb_id='seq_0', max_residues=4000, max_seq_len=1000, max_batch=100):
+def get_prediction(loaded_model, sequence, pdb_id='seq_0', temperature=1, max_residues=4000, max_seq_len=1000, max_batch=100):
     """
     This function performs secondary structure prediction for a given protein sequence.
 
@@ -181,8 +181,7 @@ def get_prediction(loaded_model, sequence, pdb_id='seq_0', max_residues=4000, ma
     # Store predicted secondary structure labels, residue embeddings, and softmax probabilities
     results["sec_structs"] = torch.max(d3_Yhat[0, :seq_len], dim=1)[1].detach().cpu().numpy().squeeze()
     results["residue_embs"] = emb.detach().cpu().numpy().squeeze()
-    probs = torch.nn.Softmax(dim=1)
-    results["ss8_tensor"] = probs(d8_Yhat[0, :seq_len])
+    results["ss8_tensor"] = torch.nn.Softmax( d8_Yhat[0, :seq_len]/temperature )
 
     # Calculate the time taken for prediction
     passed_time = time.time() - start
