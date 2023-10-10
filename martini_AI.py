@@ -128,7 +128,7 @@ def read_fasta(fasta_path, split_char="!", id_field=0):
     print("Read {} sequences.".format(len(seqs)))
     return seqs
 
-def get_prediction(loaded_model, sequence, pdb_id='seq_0',temperature=1 max_residues=4000, max_seq_len=1000, max_batch=100):
+def get_prediction(loaded_model, sequence, pdb_id='seq_0',temperature=1, max_residues=4000, max_seq_len=1000, max_batch=100):
     """
     This function performs secondary structure prediction for a given protein sequence.
 
