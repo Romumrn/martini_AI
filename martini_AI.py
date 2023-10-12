@@ -129,7 +129,7 @@ def read_fasta(fasta_path, split_char="!", id_field=0):
     return seqs
 
 
-def get_prediction(loaded_model, sequence, pdb_id='seq_0',temperature=1, max_residues=4000, max_seq_len=1000, max_batch=100):
+def get_prediction(loaded_model, sequence, pdb_id='seq_0',temperature=1, max_residues=4000, max_seq_len=1000):
     """
     This function performs secondary structure prediction for a given protein sequence.
 
@@ -140,12 +140,14 @@ def get_prediction(loaded_model, sequence, pdb_id='seq_0',temperature=1, max_res
     - temperature: Control the "smoothness" of the softmax distribution. (default: 1)
     - max_residues: Maximum number of residues in a batch (default: 4000).
     - max_seq_len: Maximum sequence length (default: 1000).
-    - max_batch: Maximum batch size (default: 100).
 
     Returns:
     - result: Numpy array containing the sequence and predicted secondary structure probabilities.
               Each row consists of a residue and its associated probabilities for different secondary structure classes.
     """
+    if len(sequence) > max_seq_len:
+        print( f"Error: The protein is to long (max_residue:{max_seq_len}).")
+        return 
     model, tokenizer = loaded_model
 
     # Load the pre-trained secondary structure prediction model
@@ -199,3 +201,103 @@ def get_prediction(loaded_model, sequence, pdb_id='seq_0',temperature=1, max_res
     result = np.column_stack((list(sequence), probabilities))
 
     return result
+
+
+
+#####  Need to fix it #####
+def get_predictions(loaded_model, sequences, pdb_ids=None, temperature=1, max_residues=4000, max_seq_len=1000, max_batch=100):
+    """
+    This function performs secondary structure prediction for a batch of protein sequences.
+
+    Parameters:
+    - loaded_model: Tuple containing the ProtT5 model and tokenizer.
+    - sequences: List of protein sequences as strings.
+    - pdb_ids: List of identifiers for the protein sequences (default: None).
+    - temperature: Control the "smoothness" of the softmax distribution (default: 1).
+    - max_residues: Maximum number of residues in a batch (default: 4000).
+    - max_seq_len: Maximum sequence length (default: 1000).
+    - max_batch: Maximum batch size (default: 100).
+
+    Returns:
+    - results: A dictionary containing the predictions and information for each protein sequence.
+               Keys include 'residue_embs', 'sec_structs', 'df_ss8_probs', and 'ss8_tensor'.
+    """
+    model, tokenizer = loaded_model
+
+    # Load the pre-trained secondary structure prediction model
+    sec_struct_model = load_sec_struct_model("./protT5/sec_struct_checkpoint/secstruct_checkpoint.pt")
+
+    # Initialize results dictionary to store predictions
+    results = {"residue_embs": dict(), "sec_structs": dict(), "df_ss8_probs": dict(), "ss8_tensor": dict()}
+
+    # Create a dictionary to map protein identifiers to their sequences
+    seqs = dict()
+    if isinstance(sequences, str):
+        sequences = [sequences]
+    if len(sequences) != len(pdb_ids):
+        if pdb_ids is not None:
+            print("List of sequences and list of identifiers are not the same length")
+            return
+    for i in range(len(sequences)):
+        if pdb_ids is not None:
+            seqs[pdb_ids[i]] = sequences[i]
+        else:
+            seqs[i] = sequences[i]
+
+    # Sort sequences according to length (reduces unnecessary padding, speeds up embedding)
+    seq_dict = sorted(seqs.items(), key=lambda kv: len(seqs[kv[0]]), reverse=True)
+
+    # Initialize a list to hold sequences in the current batch
+    batch = list()
+    start = time.time()
+
+    for seq_idx, (pdb_id, seq) in enumerate(seq_dict, 1):
+        seq = seq
+        seq_len = len(seq)
+        seq = ' '.join(list(seq))
+        batch.append((pdb_id, seq, seq_len))
+
+        # Count residues in the current batch and add the last sequence length to
+        # avoid processing batches with too many residues (n_res_batch > max_residues)
+        n_res_batch = sum([s_len for _, _, s_len in batch]) + seq_len
+
+        # Check if batch size or sequence length limits are reached, or it's the last sequence
+        if len(batch) >= max_batch or n_res_batch >= max_residues or seq_idx == len(seq_dict) or seq_len > max_seq_len:
+            pdb_ids, seqs, seq_lens = zip(*batch)
+            batch = list()
+
+            # Add special tokens, encode sequences, and move to GPU (if available)
+            token_encoding = tokenizer.batch_encode_plus(seqs, add_special_tokens=True, padding="longest")
+            input_ids = torch.tensor(token_encoding['input_ids']).to(device)
+            attention_mask = torch.tensor(token_encoding['attention_mask']).to(device)
+
+            try:
+                with torch.no_grad():
+                    # Perform embedding of the input sequence using the ProtT5 model
+                    embedding_repr = model(input_ids, attention_mask=attention_mask)
+            except RuntimeError:
+                print("RuntimeError during embedding for {} (L={})".format(pdb_id, seq_len))
+                continue
+
+            d3_Yhat, d8_Yhat, diso_Yhat = sec_struct_model(embedding_repr.last_hidden_state)
+
+            for batch_idx, identifier in enumerate(pdb_ids):
+                s_len = seq_lens[batch_idx]
+                # Slice off padding in the embeddings
+                emb = embedding_repr.last_hidden_state[batch_idx, :s_len]
+                results["sec_structs"][identifier] = torch.max(d3_Yhat[batch_idx, :s_len], dim=1)[1].detach().cpu().numpy().squeeze()
+                results["residue_embs"][identifier] = emb.detach().cpu().numpy().squeeze()
+
+                # Apply softmax with temperature to d8_Yhat and store the result
+                probs = torch.nn.Softmax(dim=1)
+                ss8_tensor_softmaxed = probs(d8_Yhat[batch_idx, :seq_len] / temperature)
+                results["ss8_tensor"][identifier] = ss8_tensor_softmaxed
+                sequence = seq.split(" ")
+                np_probs = np.array(ss8_tensor_softmaxed.cpu().detach().numpy(), dtype=np.float32)
+                results["df_ss8_probs"][identifier] = np.column_stack((list(sequence), np_probs))
+
+    # Calculate the time taken for prediction
+    passed_time = time.time() - start
+    print('### Done in {} sec'.format(str(passed_time)))
+
+    return results["df_ss8_probs"]

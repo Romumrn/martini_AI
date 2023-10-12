@@ -1,38 +1,25 @@
 # Project: Martini Dyhedrals powered by AI
 
-Based on [ProtTrans](https://github.com/agemagician/ProtTrans), to convert the output of a neural network into secondary structure probabilities and identify suitable dihedrals for Martini3.
+
+The aim of this repo is to be able to predict the probability of secondary structure conformation based on the sequence of amino acid only with a Artifical intelligence model: [ProtTrans](https://github.com/agemagician/ProtTrans). Once these probabilities computed, give personalised dyhedral angle potentials for each amino acid based on sequence information. This will make it possible to make proteins more flexible/regionally oriented and thus ensure better folding. 
 
 ## Requirements
 
-- Powerful GPU
-- Sufficient Memory 
+- Librairies : please find all information in [requirements](./requirements.txt)
+- If local use : a GPU with more than 12Gb of memory
 
-# Command Line Instructions
 
-1. Create a virtual environment (optional but recommended):
+# How to run 
 
+## Command line
 ```
-python -m venv my_virtual_env
-source my_virtual_env/bin/activate
-```
-
-## Requirement 
-
-- Big GPU
-- Memory (to define)
-
-
-
-# Command line
-```
-python -m venv my_virtual_env
-source my_virtual_env/bin/activate
 pip install -r requirements.txt
 
-python run_ProtT5.py SQUENCE
+python run_ProtT5.py "SEQUENCE" ID
+
 ```
 
-# Or run it google collab 
+## Or run it google collab 
 
-....
-...
+
+check the notebook link (soon...)
