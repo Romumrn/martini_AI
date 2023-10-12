@@ -87,7 +87,7 @@ def load_sec_struct_model(checkpoint_dir):
     model.load_state_dict(state['state_dict'])
     model = model.eval()
     model = model.to(device)
-    print('Loaded sec. struct. model from epoch: {:.1f}'.format(state['epoch']))
+    #print('Loaded sec. struct. model from epoch: {:.1f}'.format(state['epoch']))
     return model
 
 # Function to load the encoder-part of ProtT5 in half-precision
@@ -297,7 +297,7 @@ def get_predictions(loaded_model, sequences, pdb_ids=None, temperature=1, max_re
                 results["df_ss8_probs"][identifier] = np.column_stack((list(sequence), np_probs))
 
     # Calculate the time taken for prediction
-    passed_time = time.time() - start
-    print('### Done in {} sec'.format(str(passed_time)))
+    #passed_time = time.time() - start
+    #print('### Done in {} sec'.format(str(passed_time)))
 
     return results["df_ss8_probs"]
