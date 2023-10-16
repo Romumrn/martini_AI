@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from transformers import T5EncoderModel, T5Tokenizer
 import torch
 import h5py
@@ -8,14 +10,16 @@ import sys
 import os
 import wget
 from urllib.request import Request, urlopen
+import torch
+from martini_AI import create_folder_and_download_files , get_T5_model, get_prediction
+
+
 torch.cuda.empty_cache()
 
 #@title Import dependencies and check whether GPU is available. { display-mode: "form" }
 
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-print("Using {}".format(device))
-import torch
-from martini_AI import create_folder_and_download_files , get_T5_model, get_prediction
+
 create_folder_and_download_files()
 #@title Load the checkpoint for secondary structure prediction. { display-mode: "form" }
 preloaded_model = get_T5_model()
@@ -51,19 +55,35 @@ def read_fasta( fasta_path, split_char="!", id_field=0):
 
     return seqs
 
-
+def is_fasta(file_path):
+    try:
+        with open(file_path, 'r') as file:
+            first_line = file.readline()
+            return first_line.startswith(">")
+    except FileNotFoundError:
+        return False
 
 # Load example fasta.
 if sys.argv[1] :
-    seq = sys.argv[1]
+    if is_fasta(sys.argv[1]):
+        seqs  =read_fasta(sys.argv[1])
+    id = seqs.keys()[0]
+    seq = seqs[id]
+    else:
+       seq = sys.argv[1]
+        if sys.argv[2] :
+            id = sys.argv[2]
+        else:
+            id = "seq000"
 else:
     print( "Please provide a sequence")
     exit
 
+
 # Compute embeddings and/or secondary structure predictions
 print( "get prediction")
 
-result = get_prediction(preloaded_model, seq, "sequence_0")
+result = get_prediction(preloaded_model, seq, id)
 
 
 
