@@ -67,8 +67,8 @@ def is_fasta(file_path):
 if sys.argv[1] :
     if is_fasta(sys.argv[1]):
         seqs  =read_fasta(sys.argv[1])
-    id = seqs.keys()[0]
-    seq = seqs[id]
+        id = seqs.keys()[0]
+        seq = seqs[id]
     else:
        seq = sys.argv[1]
         if sys.argv[2] :
@@ -100,4 +100,10 @@ dssp8 = ["G", "H", "I", "E", "B", "T", "S", "C"]
 # list_predicted = max_index.tolist()
 DF = pd.DataFrame(result)
 DF.columns = ["AA"] + dssp8
-print( DF )
+
+filename=seq+"_prediction.csv"
+DF.to_csv(filename, index=False)  
+
+print( DF.describe() )
+
+print( f"Save in {filename}")
