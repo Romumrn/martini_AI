@@ -55,7 +55,7 @@ if sys.argv[1] :
         seqs  =read_fasta(sys.argv[1])
         id = list(seqs.keys())[0]
         seq = seqs[id]
-        print( "Fasta sequence loaded")
+        print( f"Fasta sequence loaded {id}")
     else:
         seq = sys.argv[1]
         if sys.argv[2]:
@@ -99,7 +99,7 @@ dssp8 = ["G", "H", "I", "E", "B", "T", "S", "C"]
 DF = pd.DataFrame(result)
 DF.columns = ["AA"] + dssp8
 
-filename=seq+"_prediction.csv"
+filename=id+"_prediction.csv"
 DF.to_csv(filename, index=False)  
 
 print( DF.describe() )
