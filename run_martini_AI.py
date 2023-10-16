@@ -71,7 +71,7 @@ if sys.argv[1] :
         seq = seqs[id]
     else:
         seq = sys.argv[1]
-        if sys.argv[2] :
+        if sys.argv[2]:
             id = sys.argv[2]
         else:
             id = "seq000"
