@@ -37,7 +37,9 @@ pip install -r requirements.txt
 3. Run the code for protein secondary structure prediction. You can provide a sequence as a command-line argument.
 
 ```
-python run_ProtT5.py "SEQUENCE" "ID"
+python run_martini_AI.py --sequence "SEQUENCE" --sequence_id "ID"
+#or
+python run_martini_AI.py --fasta protain.fasta
 ```
 
 
