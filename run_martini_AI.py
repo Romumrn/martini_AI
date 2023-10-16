@@ -12,17 +12,7 @@ import wget
 from urllib.request import Request, urlopen
 import torch
 from martini_AI import create_folder_and_download_files , get_T5_model, get_prediction
-
-
 torch.cuda.empty_cache()
-
-#@title Import dependencies and check whether GPU is available. { display-mode: "form" }
-
-device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-
-create_folder_and_download_files()
-#@title Load the checkpoint for secondary structure prediction. { display-mode: "form" }
-preloaded_model = get_T5_model()
 
 #@title Read in file in fasta format. { display-mode: "form" }
 def read_fasta( fasta_path, split_char="!", id_field=0):
@@ -49,10 +39,6 @@ def read_fasta( fasta_path, split_char="!", id_field=0):
                 # repl. all non-standard AAs and map them to unknown/X
                 seq = seq.replace('U','X').replace('Z','X').replace('O','X')
                 seqs[ uniprot_id ] += seq
-    example_id=next(iter(seqs))
-    print("Read {} sequences.".format(len(seqs)))
-    print("Example:\n{}\n{}".format(example_id,seqs[example_id]))
-
     return seqs
 
 def is_fasta(file_path):
@@ -67,17 +53,29 @@ def is_fasta(file_path):
 if sys.argv[1] :
     if is_fasta(sys.argv[1]):
         seqs  =read_fasta(sys.argv[1])
-        id = seqs.keys()[0]
+        id = list(seqs.keys())[0]
         seq = seqs[id]
+        print( "Fasta sequence loaded")
     else:
         seq = sys.argv[1]
         if sys.argv[2]:
             id = sys.argv[2]
         else:
             id = "seq000"
+    
 else:
     print( "Please provide a sequence")
     exit
+
+
+#@title Import dependencies and check whether GPU is available. { display-mode: "form" }
+
+device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+
+create_folder_and_download_files()
+#@title Load the checkpoint for secondary structure prediction. { display-mode: "form" }
+preloaded_model = get_T5_model()
+
 
 
 # Compute embeddings and/or secondary structure predictions
